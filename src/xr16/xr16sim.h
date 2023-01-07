@@ -32,8 +32,8 @@ typedef struct XR16 {
 	Bool v;
 	Bool x;
 	Insn insnPrev;
-	long insns;
-	long cycles;
+	int64_t insns;
+	int64_t cycles;
 	Word a, b;
 } XR16;
 
@@ -43,7 +43,7 @@ void emit(SZ szHex);
 void listing(SZ szListing);
 
 XR16 reset(Word trace);
-XR16 sim(XR16 p, int cinsns);
+XR16 sim(XR16 p, int64_t cinsns);
 
 /* Private -- move elsewhere */
 SZ szForAddr(char buf[], size_t bufsiz, Addr addr);

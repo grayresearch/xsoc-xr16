@@ -30,7 +30,7 @@ static char rcsid[] =
 #include <ctype.h>
 #include <stdarg.h>
 #include <assert.h>
-#include <io.h>
+#include <unistd.h>
 #include "xr16.h"
 #include "xr16sim.h"
  
@@ -78,7 +78,7 @@ int main(int argc, SZ argv[]) {
 	/* Clean up in case of error.  Leave the listing file though. */
 	if (errors > 0) {
 		if (hexfile)
-			_unlink(hexfile);
+			unlink(hexfile);
 		return 1;
 	}
 

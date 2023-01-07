@@ -1,23 +1,15 @@
 #
 # makefile -- xr16 assembler/simulator makefile
 #
-# Copyright (C) 1999, 2000, Gray Research LLC.  All rights reserved.
+# Copyright (C) 1999-2023, Gray Research LLC.  All rights reserved.
 # The contents of this file are subject to the XSOC License Agreement;
 # you may not use this file except in compliance with this Agreement.
 # See the LICENSE file.
-#
-# usage: nmake
 
-CC=cl -nologo
-CFLAGS=-Ot -ML
-O=obj
-.c{$O\}.obj::
-	 $(CC) $(CFLAGS) -Fo$O\ -c $<
+SRCS=main.c asm.c sim.c
 
-OBJS=$O\main.obj $O\asm.obj $O\sim.obj
-
-xr16.exe: $(OBJS)
-	$(CC) -Ot -Fe$@ $(OBJS)
+xr16: $(SRCS)
+	$(CC) -O3 -o xr16 $(SRCS)
 
 clean:
-	del xr16.exe $(OBJS)
+	rm xr16 $(OBJS)

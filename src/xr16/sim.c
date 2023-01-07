@@ -110,7 +110,7 @@ XR16 reset(Word trace)
  *
  * Also trace instruction execution according to p.trace.
  */
-XR16 sim(XR16 p, int cinsns)
+XR16 sim(XR16 p, int64_t cinsns)
 {
 	while (cinsns == -1 || --cinsns >= 0) {
 		Insn insn = fetchInsn(p.pc);
@@ -124,7 +124,7 @@ XR16 sim(XR16 p, int cinsns)
 			char szInsn[19];
 			szForAddr(szAddr, sizeof szAddr, p.pc);
 			szForInsn(szInsn, sizeof szInsn, p.pc, insn);
-			printf("%7d  %04X %-12.12s %04X %-17s", p.cycles, p.pc, szAddr, insn, szInsn);
+			printf("%7ld  %04X %-12.12s %04X %-17s", p.cycles, p.pc, szAddr, insn, szInsn);
 		}
 
 		p.pc += 2;
@@ -330,7 +330,7 @@ XR16 sim(XR16 p, int cinsns)
 
 		if (TRACE(p) && (TR_INSN(p) || (TR_CALL(p) && (BIT(OP(insn))&bitopCall)))) {
 			if ((BIT(OP(insn)) & bitopResult) && prd != &p.r[0])
-				printf(" r%d=%d", prd - p.r, (short)*prd);
+				printf(" r%ld=%d", prd - p.r, (short)*prd);
 			printf("\n");
 		}
 
@@ -365,7 +365,7 @@ Word loadByte(XR16* p, Addr addr)
 {
 	char szAddr[cbAddr];
 	if (TR_MEM(*p))
-		printf(" %02X=[%04X]", rgb[addr], szForAddr(szAddr, sizeof szAddr, addr));
+		printf(" %02X=[%s]", rgb[addr], szForAddr(szAddr, sizeof szAddr, addr));
 	p->cycles++;
 	return rgb[addr];
 }

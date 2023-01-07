@@ -33,6 +33,7 @@ static char rcsid[] =
 #include <stdarg.h>
 #include <time.h>
 #include <assert.h>
+#include <errno.h>
 #include "xr16.h"
 #include "xr16sim.h"
 
@@ -124,7 +125,7 @@ void source(SZ source)
 		return;
 	}
 
-	_snprintf(szLine, sizeof szLine, "# file %s", source);
+	snprintf(szLine, sizeof szLine, "# file %s", source);
 	szLine[sizeof(szLine)-1] = 0;
 	addListingLine(szLine);
 
@@ -769,11 +770,11 @@ SZ szForAddr(char buf[], size_t cbbuf, Addr addr)
 
 	if (base && !(strcmp(base->id, "end")==0 || strcmp(base->id, "__end")==0)) {
 		if (addr == base->addr)
-			_snprintf(buf, cbbuf, "%s", base->id);
+			snprintf(buf, cbbuf, "%s", base->id);
 		else
-			_snprintf(buf, cbbuf, "%s+%d", base->id, addr - base->addr);
+			snprintf(buf, cbbuf, "%s+%d", base->id, addr - base->addr);
 	} else
-		_snprintf(buf, cbbuf, "%04X", addr);
+		snprintf(buf, cbbuf, "%04X", addr);
 
 	buf[cbbuf-1] = 0;
 
@@ -925,7 +926,7 @@ void applyFixups() {
 void addListingLine(SZ line) {
 	if (nlines < NLINES) {
 		lines[nlines].addr = here();
-		lines[nlines].szLine = _strdup(line);
+		lines[nlines].szLine = strdup(line);
 		++nlines;
 	}
 }
@@ -971,6 +972,10 @@ void listing(SZ lstfile) {
 		error("error writing '%s' (%s)", lstfile, strerror(errno));
 }
 
+#ifndef min
+#define min(a,b) ((a)<(b) ? (a) : (b))
+#endif
+
 void emit(SZ hexfile) {
 	FILE*	hex;
 	Addr	addr;
@@ -982,7 +987,7 @@ void emit(SZ hexfile) {
 
 	for (addr = 0; addr < cb; addr++) {
 		if (addr % 16 == 0)
-			fprintf(hex, "- %02X %04X", __min(0x10, cb - addr), addr);
+			fprintf(hex, "- %02X %04X", min(0x10, cb - addr), addr);
 		fprintf(hex, " %02X", rgb[addr]);
 		if (addr % 16 == 15 || addr == cb-1)
 			fprintf(hex, "\n");
@@ -1068,38 +1073,38 @@ SZ szForInsn(char buf[], size_t cbbuf, Addr addr, Insn insn) {
 	switch (OP(insn)) {
 	case OP_ADD:
 	case OP_SUB:
-		_snprintf(buf, cbbuf, mpopsz[OP(insn)], mprnsz[RD(insn)], mprnsz[RA(insn)], mprnsz[RB(insn)]);
+		snprintf(buf, cbbuf, mpopsz[OP(insn)], mprnsz[RD(insn)], mprnsz[RA(insn)], mprnsz[RB(insn)]);
 		break;
 	case OP_ADDI:
-		_snprintf(buf, cbbuf, mpopsz[OP(insn)], mprnsz[RD(insn)], mprnsz[RA(insn)], IMM_SEXT(insn));
+		snprintf(buf, cbbuf, mpopsz[OP(insn)], mprnsz[RD(insn)], mprnsz[RA(insn)], IMM_SEXT(insn));
 		break;
 	case OP_RR:
 		if (mpfnszRR[FN(insn)])
-			_snprintf(buf, cbbuf, mpfnszRR[FN(insn)], mprnsz[RD(insn)], mprnsz[RB(insn)]);
+			snprintf(buf, cbbuf, mpfnszRR[FN(insn)], mprnsz[RD(insn)], mprnsz[RB(insn)]);
 		break;
 	case OP_RI:
 		if (mpfnszRI[FN(insn)])
-			_snprintf(buf, cbbuf, mpfnszRI[FN(insn)], mprnsz[RD(insn)], IMM_SEXT(insn));
+			snprintf(buf, cbbuf, mpfnszRI[FN(insn)], mprnsz[RD(insn)], IMM_SEXT(insn));
 		break;
 	case OP_LW:
 	case OP_SW:
 	case OP_JAL:
-		_snprintf(buf, cbbuf, mpopsz[OP(insn)], mprnsz[RD(insn)], (((IMM(insn)>>1)<<1)|((IMM(insn)&1)<<4)), mprnsz[RA(insn)]);
+		snprintf(buf, cbbuf, mpopsz[OP(insn)], mprnsz[RD(insn)], (((IMM(insn)>>1)<<1)|((IMM(insn)&1)<<4)), mprnsz[RA(insn)]);
 		break;
 	case OP_LB:
 	case OP_SB:
-		_snprintf(buf, cbbuf, mpopsz[OP(insn)], mprnsz[RD(insn)], IMM(insn), mprnsz[RA(insn)]);
+		snprintf(buf, cbbuf, mpopsz[OP(insn)], mprnsz[RD(insn)], IMM(insn), mprnsz[RA(insn)]);
 		break;
 	case OP_BR:
 		if (mpcondszBR[COND(insn)])
-			_snprintf(buf, cbbuf, mpcondszBR[COND(insn)], addr + (DISP(insn) + 2)*sizeof(Insn));
+			snprintf(buf, cbbuf, mpcondszBR[COND(insn)], addr + (DISP(insn) + 2)*sizeof(Insn));
 		break;
 	case OP_CALL:
 	case OP_IMM:
-		_snprintf(buf, cbbuf, mpopsz[OP(insn)], IMM12(insn) << 4);
+		snprintf(buf, cbbuf, mpopsz[OP(insn)], IMM12(insn) << 4);
 		break;
 	case OP_TRAP:
-		_snprintf(buf, cbbuf, mpopsz[OP(insn)], IMM12(insn));
+		snprintf(buf, cbbuf, mpopsz[OP(insn)], IMM12(insn));
 		break;
 	}
 	buf[cbbuf] = 0;
@@ -1271,18 +1276,18 @@ int error(SZ szError, ...) {
 	++errors;
 
 	va_start(va, szError);
-	_vsnprintf(error, sizeof error, szError, va);
+	vsnprintf(error, sizeof error, szError, va);
 	va_end(va);
 	error[sizeof(error)-1] = 0;
 
 	if (szCurrentFile) {
 		if (line)
-			_snprintf(prefix, sizeof prefix, "%s(%d): %s", szCurrentFile, line, error);
+			snprintf(prefix, sizeof prefix, "%s(%d): %s", szCurrentFile, line, error);
 		else
-			_snprintf(prefix, sizeof prefix, "%s: %s", szCurrentFile, error);
+			snprintf(prefix, sizeof prefix, "%s: %s", szCurrentFile, error);
 	}
 	else
-		_snprintf(prefix, sizeof prefix, "%s", error);
+		snprintf(prefix, sizeof prefix, "%s", error);
 	prefix[sizeof(prefix)-1] = 0;
 
 	if (szProgram)
@@ -1290,7 +1295,7 @@ int error(SZ szError, ...) {
 	fprintf(stderr, "%s\n", prefix);
 	fflush(stderr);
 
-	_snprintf(listing, sizeof listing, "# error %s", prefix);
+	snprintf(listing, sizeof listing, "# error %s", prefix);
 	listing[sizeof(listing)-1] = 0;
 	addListingLine(listing);
 
